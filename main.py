@@ -3,8 +3,12 @@ from discord.ext import commands
 from datetime import datetime, timezone
 import os
 
+from dotenv import load_dotenv
 from cardgen import generate_spotify_card
 
+load_dotenv()
+
+DISCORD_KEY = os.getenv("DISCORD_KEY")
 GUILD_ID = 1381641115618377788
 
 intents = discord.Intents.default()
@@ -50,4 +54,4 @@ async def sp(ctx):
 
     await ctx.send(file=file, view=view)
 
-bot.run("DISCORD_KEY")
+bot.run(DISCORD_KEY)
