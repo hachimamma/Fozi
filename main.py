@@ -9,7 +9,7 @@ from cardgen import generate_spotify_card
 load_dotenv()
 
 DISCORD_KEY = os.getenv("DISCORD_KEY")
-GUILD_ID = 1381641115618377788
+GUILD_ID = int(os.getenv("GUILD_ID"))
 
 intents = discord.Intents.default()
 intents.presences = True
