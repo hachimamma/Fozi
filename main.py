@@ -8,7 +8,12 @@ import re
 
 from dotenv import load_dotenv
 from cardgen import generate_spotify_card
-from utils.lyrics import fetch_lyrics
+from utils.lyrics import fetch
+
+from utils.fun import (
+    dad_joke, vibe_cmd, fortune_cmd, waifu_cmd, husbando_cmd,
+    rate_cmd, drip_cmd, battleroyale_cmd
+)
 
 load_dotenv()
 
@@ -74,25 +79,58 @@ async def lyrics(ctx):
         return await ctx.send("You're not listening to Spotify right now.")
 
     title = spotify.title
-    artist = spotify.artists[0]  # take the first artist
+    artist = spotify.artists[0]
     thumbnail = spotify.album_cover_url
 
-    lyrics = await fetch_lyrics(artist, title)
+    lyrics = await fetch(artist, title)
 
     if not lyrics:
         return await ctx.send(f"No lyrics available for: {title} by {artist}")
 
-    # Remove junk headers like contributors, translations, etc.
     lyrics = re.sub(r"(?si)^.*?\bLyrics\b", "", lyrics).strip()
     lyrics = re.sub(r"(?si)(translations|read more|\d+ contributors|\b[a-z]+ \(.*?\))", "", lyrics).strip()
 
     embed = discord.Embed(
         title=f"{title} - {artist}",
-        description=lyrics[:4090],  # Discord max embed description size
+        description=lyrics[:4090],
         color=discord.Color.green()
     )
     embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.display_avatar.url)
     embed.set_thumbnail(url=thumbnail)
     await ctx.send(embed=embed)
+
+@bot.command()
+async def dadjoke(ctx):
+    await ctx.send(embed=dad_joke(ctx.author))
+
+@bot.command()
+async def vibecheck(ctx):
+    await ctx.send(embed=vibe(ctx.author))
+
+@bot.command()
+async def fortune(ctx):
+    await ctx.send(embed=fortune_cmd(ctx.author))
+
+@bot.command()
+async def waifu(ctx):
+    await ctx.send(embed=waifu_cmd(ctx.author))
+
+@bot.command()
+async def husbando(ctx):
+    await ctx.send(embed=husbando_cmd(ctx.author))
+
+@bot.command()
+async def rate(ctx, *, thing: str):
+    await ctx.send(embed=rate_cmd(thing))
+
+@bot.command()
+async def dripcheck(ctx, user: discord.Member = None):
+    user = user or ctx.author
+    await ctx.send(embed=drip_cmd(user.mention))
+
+@bot.command()
+async def br(ctx, *users: discord.Member):
+    user_mentions = [u.mention for u in users]
+    await ctx.send(embed=battleroyale_cmd(user_mentions))
 
 bot.run(DISCORD_KEY)

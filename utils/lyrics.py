@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 GENIUS_SEARCH_URL = "https://genius.com/api/search/multi"
 
-async def fetch_lyrics(artist: str, title: str) -> str | None:
+async def fetch(artist: str, title: str) -> str | None:
     query = f"{title} {artist}"
     async with aiohttp.ClientSession() as session:
         async with session.get(GENIUS_SEARCH_URL, params={"q": query}) as resp:
