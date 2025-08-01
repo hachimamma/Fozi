@@ -9,6 +9,8 @@ import re
 from dotenv import load_dotenv
 from cardgen import generate_spotify_card
 from utils.lyrics import fetch
+from server.join import handle_member_join
+from server import economy
 
 from utils.fun import (
     dad_joke, vibe_cmd, fortune_cmd, waifu_cmd, husbando_cmd,
@@ -28,8 +30,23 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='.', intents=intents)
 
 @bot.event
+async def on_member_join(member):
+    await handle_member_join(bot, member)
+
+@bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
+    
+    bot.tree.clear_commands(guild=None)
+    
+    guild = discord.Object(id=GUILD_ID)
+    bot.tree.clear_commands(guild=guild)
+    
+    economy.register_commands(bot)
+    
+    await bot.tree.sync()
+    await bot.tree.sync(guild=guild)
+    print("Commands cleared and synced")
 
 @bot.command()
 async def sp(ctx):
@@ -105,7 +122,7 @@ async def dadjoke(ctx):
 
 @bot.command()
 async def vibecheck(ctx):
-    await ctx.send(embed=vibe(ctx.author))
+    await ctx.send(embed=vibe_cmd(ctx.author))
 
 @bot.command()
 async def fortune(ctx):
