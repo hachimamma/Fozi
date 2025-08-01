@@ -1,5 +1,3 @@
-# server/economy.py
-
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -35,7 +33,6 @@ def get_user(user_id):
             return 0, None
         return row
 
-# Helper to update user data
 def update_user(user_id, balance=None, last_daily=None):
     with sqlite3.connect(DB_PATH) as conn:
         if balance is not None and last_daily is not None:
@@ -45,8 +42,7 @@ def update_user(user_id, balance=None, last_daily=None):
         elif last_daily is not None:
             conn.execute("UPDATE economy SET last_daily = ? WHERE user_id = ?", (last_daily, user_id))
 
-# Dropdown View for coinflip
-class CoinflipDropdown(discord.ui.Select):
+class BallfloipDropdown(discord.ui.Select):
     def __init__(self, bet_amount: int, user_id: int):
         self.bet_amount = bet_amount
         self.user_id = user_id
@@ -59,15 +55,13 @@ class CoinflipDropdown(discord.ui.Select):
         super().__init__(placeholder="Choose heads or tails...", options=options)
 
     async def callback(self, interaction: discord.Interaction):
-        # Make sure only the original user can interact
         if interaction.user.id != self.user_id:
-            await interaction.response.send_message("This isn't your coinflip!", ephemeral=True)
+            await interaction.response.send_message("This isn't your ballflip!", ephemeral=True)
             return
             
         guess = self.values[0].lower()
         bal, _ = get_user(self.user_id)
         
-        # Double-check they still have enough balance
         if self.bet_amount > bal:
             await interaction.response.send_message("You don't have enough balls for this bet anymore!", ephemeral=True)
             return
@@ -93,18 +87,16 @@ class CoinflipDropdown(discord.ui.Select):
         
         update_user(self.user_id, balance=bal)
         
-        # Disable the dropdown after use
         self.disabled = True
         await interaction.response.edit_message(embed=embed, view=self.view)
 
-class CoinflipView(discord.ui.View):
+class BallflipView(discord.ui.View):
     def __init__(self, bet_amount: int, user_id: int):
         super().__init__(timeout=60.0)  # 60 second timeout
-        self.add_item(CoinflipDropdown(bet_amount, user_id))
+        self.add_item(BallflipDropdown(bet_amount, user_id))
         self.user_id = user_id
     
     async def on_timeout(self):
-        # Disable all items when view times out
         for item in self.children:
             item.disabled = True
 
@@ -122,7 +114,7 @@ def register_commands(bot):
             if (now - last_time).total_seconds() < 86400:
                 next_claim = last_time + datetime.timedelta(days=1)
                 embed = discord.Embed(
-                    title="⏰ Too Early!",
+                    title="Too Early!",
                     description=f"You already claimed your daily reward!\nCome back at `{next_claim.isoformat(timespec='minutes')}` UTC.",
                     color=discord.Color.orange()
                 )
@@ -134,7 +126,7 @@ def register_commands(bot):
         update_user(user_id, balance=new_balance, last_daily=now.isoformat())
 
         embed = discord.Embed(
-            title="🎁 Daily Reward Claimed!",
+            title="Daily Reward Claimed!",
             description=f"You earned **{reward}** balls!",
             color=discord.Color.green()
         )
@@ -143,9 +135,9 @@ def register_commands(bot):
         
         await interaction.response.send_message(embed=embed)
 
-    @tree.command(name="coinflip", description="Bet on heads or tails")
+    @tree.command(name="ballflip", description="Bet on heads or tails")
     @app_commands.describe(bet="Amount to bet")
-    async def coinflip(interaction: discord.Interaction, bet: int):
+    async def ballflip(interaction: discord.Interaction, bet: int):
         bal, _ = get_user(interaction.user.id)
         
         if bet <= 0 or bet > bal:
@@ -153,23 +145,21 @@ def register_commands(bot):
             return
 
         embed = discord.Embed(
-            title="🪙 Coinflip",
+            title="🏀 Ballflip",
             description=f"You're betting **{bet}** balls!\nChoose heads or tails using the dropdown below.",
             color=discord.Color.blue()
         )
         embed.add_field(name="Current Balance", value=f"**{bal}** balls", inline=False)
         
-        view = CoinflipView(bet, interaction.user.id)
+        view = BallflipView(bet, interaction.user.id)
         
         try:
             await interaction.response.send_message(embed=embed, view=view)
         except (discord.errors.ConnectionClosed, discord.errors.HTTPException) as e:
-            # Try to send a simpler fallback message if the embed/view fails
             try:
-                await interaction.response.send_message(f"🪙 Coinflip started! Betting {bet} balls. (Simplified due to connection issues)")
+                await interaction.response.send_message(f"🏀 Ballflip started! Betting {bet} balls. (Simplified due to connection issues)")
             except:
-                # If everything fails, at least log it
-                print(f"Failed to send coinflip message for user {interaction.user.id}: {e}")
+                print(f"Failed to send ballflip message for user {interaction.user.id}: {e}")
 
     @tree.command(name="rob", description="Rob another user")
     @app_commands.describe(victim="The user you want to rob")
