@@ -121,7 +121,7 @@ async def dadjoke(ctx):
     await ctx.send(embed=dad_joke(ctx.author))
 
 @bot.command()
-async def vibecheck(ctx):
+async def vibe(ctx):
     await ctx.send(embed=vibe_cmd(ctx.author))
 
 @bot.command()
@@ -141,7 +141,7 @@ async def rate(ctx, *, thing: str):
     await ctx.send(embed=rate_cmd(thing))
 
 @bot.command()
-async def dripcheck(ctx, user: discord.Member = None):
+async def drip(ctx, user: discord.Member = None):
     user = user or ctx.author
     await ctx.send(embed=drip_cmd(user.mention))
 
